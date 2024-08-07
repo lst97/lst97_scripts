@@ -37,7 +37,7 @@ run_command sudo gem update
 # Update pip packages (global)
 print_header "UPDATING PIP PACKAGES [GLOBAL]"
 run_command pip install --upgrade pip
-run_command pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install -U
+run_command pip --disable-pip-version-check list --outdated --format=json | python -c "import json, sys; print('\n'.join([x['name'] for x in json.load(sys.stdin)]))" | xargs -n1 pip install -U
 
 # Update Conda environments
 update_conda_env() {
@@ -46,7 +46,7 @@ update_conda_env() {
     run_command conda activate $env_name
     run_command conda update --all -y
     run_command conda update python -y
-    run_command pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install -U
+    run_command pip --disable-pip-version-check list --outdated --format=json | python -c "import json, sys; print('\n'.join([x['name'] for x in json.load(sys.stdin)]))" | xargs -n1 pip install -U
     run_command conda deactivate
 }
 
@@ -57,7 +57,7 @@ source ~/miniconda3/etc/profile.d/conda.sh
 update_conda_env base
 
 # Update custom conda environment (replace 'myenv' with your environment name)
-update_conda_env myenv
+update_conda_env conda
 
 # Update Mac App Store apps
 print_header "UPDATING MAC APP STORE APPS"
