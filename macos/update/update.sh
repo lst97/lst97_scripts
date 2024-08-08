@@ -25,14 +25,25 @@ print_header "UPDATING BREW"
 run_command brew update
 run_command brew upgrade
 run_command brew cleanup
+echo "Brew update and cleanup complete"
 
 # Update Node.js packages
 print_header "UPDATING NODEJS PACKAGES"
 run_command npm update -g
 
+# Clear npm cache
+print_header "CLEARING NPM CACHE"
+run_command npm cache clean --force
+echo "npm update and cache clean complete"
+
 # Update Ruby gems
 print_header "UPDATING RUBY GEMS"
-run_command sudo gem update
+run_command gem update --system
+
+#Clear gem cache
+print_header "CLEARING GEM CACHE"
+run_command gem cleanup
+echo "gem update and cleanup complete"
 
 # Update pip packages (global)
 print_header "UPDATING PIP PACKAGES [GLOBAL]"
@@ -59,6 +70,12 @@ update_conda_env base
 # Update custom conda environment (replace 'myenv' with your environment name)
 update_conda_env conda
 
+# Clear conda cache
+print_header "CLEARING CONDA CACHE"
+run_command conda clean --all -y
+run_command pip cache purge
+run_command sudo rm -rf ~/.cache/pip
+
 # Update Mac App Store apps
 print_header "UPDATING MAC APP STORE APPS"
 if command -v mas &> /dev/null; then
@@ -80,32 +97,13 @@ fi
 print_header "FLUSHING DNS CACHE"
 run_command sudo dscacheutil -flushcache
 run_command sudo killall -HUP mDNSResponder
-
-# Update locate database
-print_header "UPDATING LOCATE DATABASE"
-run_command sudo /usr/libexec/locate.updatedb
-
-# Run maintenance scripts
-print_header "RUNNING MAINTENANCE SCRIPTS"
-run_command sudo periodic daily weekly monthly
-
-# Clean up system logs and temporary files
-print_header "CLEANING UP SYSTEM"
-run_command sudo rm -rf /private/var/log/asl/*.asl
-run_command sudo rm -rf /Library/Logs/DiagnosticReports/*
-run_command sudo rm -rf /Library/Logs/Adobe/*
-run_command sudo rm -rf ~/Library/Containers/com.apple.mail/Data/Library/Logs/Mail/*
-run_command sudo rm -rf ~/Library/Logs/CoreSimulator/*
+echo "All updates and maintenance tasks have been completed."
 
 # Empty trash securely
 print_header "EMPTYING TRASH SECURELY"
 run_command rm -rfv ~/.Trash/*
+echo "Trash has been emptied securely."
 
-# Clear system and user caches
-print_header "CLEARING CACHES"
-run_command sudo rm -rf ~/Library/Caches/*
-run_command sudo rm -rf /Library/Caches/*
-
-print_header "UPDATE AND MAINTENANCE COMPLETE"
+print_header "UPDATE COMPLETE"
 echo "Press enter to quit"
 read
