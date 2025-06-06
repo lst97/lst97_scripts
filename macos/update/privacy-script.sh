@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# https://privacy.sexy — v0.13.5 — Thu, 08 Aug 2024 04:13:40 GMT
+# https://privacy.sexy — v0.13.8 — Sun, 23 Mar 2025 00:31:52 GMT
 if [ "$EUID" -ne 0 ]; then
     script_path=$([[ "$0" = /* ]] && echo "$0" || echo "$PWD/${0#./}")
     sudo "$script_path" || (
@@ -8,47 +8,6 @@ if [ "$EUID" -ne 0 ]; then
     )
     exit 0
 fi
-
-
-# ----------------------------------------------------------
-# ---------------Clear CUPS printer job cache---------------
-# ----------------------------------------------------------
-echo '--- Clear CUPS printer job cache'
-sudo rm -rfv /var/spool/cups/c0*
-sudo rm -rfv /var/spool/cups/tmp/*
-sudo rm -rfv /var/spool/cups/cache/job.cache*
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ----------------Empty trash on all volumes----------------
-# ----------------------------------------------------------
-echo '--- Empty trash on all volumes'
-# on all mounted volumes
-sudo rm -rfv /Volumes/*/.Trashes/* &>/dev/null
-# on main HDD
-sudo rm -rfv ~/.Trash/* &>/dev/null
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# --------------------Clear system cache--------------------
-# ----------------------------------------------------------
-echo '--- Clear system cache'
-sudo rm -rfv /Library/Caches/* &>/dev/null
-sudo rm -rfv /System/Library/Caches/* &>/dev/null
-sudo rm -rfv ~/Library/Caches/* &>/dev/null
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ---------Clear Xcode's derived data and archives----------
-# ----------------------------------------------------------
-echo '--- Clear Xcode'\''s derived data and archives'
-rm -rfv ~/Library/Developer/Xcode/DerivedData/* &>/dev/null
-rm -rfv ~/Library/Developer/Xcode/Archives/* &>/dev/null
-rm -rfv ~/Library/Developer/Xcode/iOS Device Logs/* &>/dev/null
-# ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
@@ -84,20 +43,6 @@ sudo defaults write /Library/Preferences/org.mozilla.firefox DisableTelemetry -b
 # ----------------------------------------------------------
 echo '--- Disable Microsoft Office telemetry'
 defaults write com.microsoft.office DiagnosticDataTypePreference -string ZeroDiagnosticData
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ----------Remove Google Software Update service-----------
-# ----------------------------------------------------------
-echo '--- Remove Google Software Update service'
-googleUpdateFile=~/Library/Google/GoogleSoftwareUpdate/GoogleSoftwareUpdate.bundle/Contents/Resources/ksinstall
-if [ -f "$googleUpdateFile" ]; then
-    $googleUpdateFile --nuke
-    echo 'Uninstalled Google update'
-else
-    echo 'Google update file does not exist'
-fi
 # ----------------------------------------------------------
 
 
@@ -159,14 +104,6 @@ done
 
 
 # ----------------------------------------------------------
-# ---------------Disable remote Apple events----------------
-# ----------------------------------------------------------
-echo '--- Disable remote Apple events'
-sudo systemsetup -setremoteappleevents off
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
 # --Disable automatic storage of documents in iCloud Drive--
 # ----------------------------------------------------------
 echo '--- Disable automatic storage of documents in iCloud Drive'
@@ -179,14 +116,6 @@ echo '--- Disable personalized advertisements and identifier tracking'
 defaults write com.apple.AdLib allowIdentifierForAdvertising -bool false
 defaults write com.apple.AdLib allowApplePersonalizedAdvertising -bool false
 defaults write com.apple.AdLib forceLimitAdTracking -bool true
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# -------------Disable captive portal detection-------------
-# ----------------------------------------------------------
-echo '--- Disable captive portal detection'
-sudo defaults write '/Library/Preferences/SystemConfiguration/com.apple.captive.control.plist' Active -bool false
 # ----------------------------------------------------------
 
 
@@ -207,105 +136,143 @@ rm -f ~/.zsh_history
 
 
 # ----------------------------------------------------------
-# --------------Clear Apple System Logs (ASL)---------------
+# ------Disable participation in Siri data collection-------
 # ----------------------------------------------------------
-echo '--- Clear Apple System Logs (ASL)'
-# Clear directory contents: "/private/var/log/asl"
-glob_pattern="/private/var/log/asl/*"
-sudo rm -rfv $glob_pattern
-# Delete files matching pattern: "/private/var/log/asl.log"
-glob_pattern="/private/var/log/asl.log"
-sudo rm -fv $glob_pattern
-# Delete files matching pattern: "/private/var/log/asl.db"
-glob_pattern="/private/var/log/asl.db"
-sudo rm -fv $glob_pattern
+echo '--- Disable participation in Siri data collection'
+defaults write com.apple.assistant.support 'Siri Data Sharing Opt-In Status' -int 2
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# -----------------Clear installation logs------------------
+# ---------------Enable application firewall----------------
 # ----------------------------------------------------------
-echo '--- Clear installation logs'
-# Delete files matching pattern: "/private/var/log/install.log"
-glob_pattern="/private/var/log/install.log"
-sudo rm -fv $glob_pattern
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ------------------Clear all system logs-------------------
-# ----------------------------------------------------------
-echo '--- Clear all system logs'
-# Clear directory contents: "/private/var/log"
-glob_pattern="/private/var/log/*"
-sudo rm -rfv $glob_pattern
+echo '--- Enable application firewall'
+/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+sudo defaults write /Library/Preferences/com.apple.alf globalstate -bool true
+defaults write com.apple.security.firewall EnableFirewall -bool true
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# --------------Clear system application logs---------------
+# -----------------Enable firewall logging------------------
 # ----------------------------------------------------------
-echo '--- Clear system application logs'
-# Clear directory contents: "/Library/Logs"
-glob_pattern="/Library/Logs/*"
-sudo rm -rfv $glob_pattern
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ---------------Clear user application logs----------------
-# ----------------------------------------------------------
-echo '--- Clear user application logs'
-# Clear directory contents: "$HOME/Library/Logs"
-glob_pattern="$HOME/Library/Logs/*"
- rm -rfv $glob_pattern
+echo '--- Enable firewall logging'
+/usr/libexec/ApplicationFirewall/socketfilterfw --setloggingmode on
+sudo defaults write /Library/Preferences/com.apple.alf loggingenabled -bool true
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# -------------------Clear Mail app logs--------------------
+# -------------------Enable stealth mode--------------------
 # ----------------------------------------------------------
-echo '--- Clear Mail app logs'
-# Clear directory contents: "$HOME/Library/Containers/com.apple.mail/Data/Library/Logs/Mail"
-glob_pattern="$HOME/Library/Containers/com.apple.mail/Data/Library/Logs/Mail/*"
- rm -rfv $glob_pattern
-# ----------------------------------------------------------
-
-
-# Clear user activity audit logs (login, logout, authentication, etc.)
-echo '--- Clear user activity audit logs (login, logout, authentication, etc.)'
-# Clear directory contents: "/private/var/audit"
-glob_pattern="/private/var/audit/*"
-sudo rm -rfv $glob_pattern
+echo '--- Enable stealth mode'
+/usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
+sudo defaults write /Library/Preferences/com.apple.alf stealthenabled -bool true
+defaults write com.apple.security.firewall EnableStealthMode -bool true
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# --------------Clear system maintenance logs---------------
+# -------Disable incoming SSH and SFTP remote logins--------
 # ----------------------------------------------------------
-echo '--- Clear system maintenance logs'
-# Delete files matching pattern: "/private/var/log/daily.out"
-glob_pattern="/private/var/log/daily.out"
-sudo rm -fv $glob_pattern
-# Delete files matching pattern: "/private/var/log/weekly.out"
-glob_pattern="/private/var/log/weekly.out"
-sudo rm -fv $glob_pattern
-# Delete files matching pattern: "/private/var/log/monthly.out"
-glob_pattern="/private/var/log/monthly.out"
-sudo rm -fv $glob_pattern
+echo '--- Disable incoming SSH and SFTP remote logins'
+echo 'yes' | sudo systemsetup -setremotelogin off
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# ---------------Clear app installation logs----------------
+# ------------Disable the insecure TFTP service-------------
 # ----------------------------------------------------------
-echo '--- Clear app installation logs'
-# Clear directory contents: "/private/var/db/receipts"
-glob_pattern="/private/var/db/receipts/*"
-sudo rm -rfv $glob_pattern
-# Delete files matching pattern: "/Library/Receipts/InstallHistory.plist"
-glob_pattern="/Library/Receipts/InstallHistory.plist"
- rm -fv $glob_pattern
+echo '--- Disable the insecure TFTP service'
+sudo launchctl disable 'system/com.apple.tftpd'
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ----------Disable Bonjour multicast advertising-----------
+# ----------------------------------------------------------
+echo '--- Disable Bonjour multicast advertising'
+sudo defaults write /Library/Preferences/com.apple.mDNSResponder.plist NoMulticastAdvertisements -bool true
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# -------------Disable insecure telnet protocol-------------
+# ----------------------------------------------------------
+echo '--- Disable insecure telnet protocol'
+sudo launchctl disable system/com.apple.telnetd
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ----Disable local printer sharing with other computers----
+# ----------------------------------------------------------
+echo '--- Disable local printer sharing with other computers'
+cupsctl --no-share-printers
+# ----------------------------------------------------------
+
+
+# Disable printing from external addresses, including the internet
+echo '--- Disable printing from external addresses, including the internet'
+cupsctl --no-remote-any
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ----------Disable remote printer administration-----------
+# ----------------------------------------------------------
+echo '--- Disable remote printer administration'
+cupsctl --no-remote-admin
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# -------------Clear iOS app copies from iTunes-------------
+# ----------------------------------------------------------
+echo '--- Clear iOS app copies from iTunes'
+rm -rfv ~/Music/iTunes/iTunes\ Media/Mobile\ Applications/* &>/dev/null
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ------------------Clear iOS photo cache-------------------
+# ----------------------------------------------------------
+echo '--- Clear iOS photo cache'
+rm -rf ~/Pictures/iPhoto\ Library/iPod\ Photo\ Cache/*
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# -----------------Clear iOS Device Backups-----------------
+# ----------------------------------------------------------
+echo '--- Clear iOS Device Backups'
+rm -rfv ~/Library/Application\ Support/MobileSync/Backup/* &>/dev/null
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# -------------------Clear iOS simulators-------------------
+# ----------------------------------------------------------
+echo '--- Clear iOS simulators'
+if type "xcrun" &>/dev/null; then
+    osascript -e 'tell application "com.apple.CoreSimulator.CoreSimulatorService" to quit'
+    osascript -e 'tell application "iOS Simulator" to quit'
+    osascript -e 'tell application "Simulator" to quit'
+    xcrun simctl shutdown all
+    xcrun simctl erase all
+fi
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# -----------Clear list of connected iOS devices------------
+# ----------------------------------------------------------
+echo '--- Clear list of connected iOS devices'
+sudo defaults delete /Users/$USER/Library/Preferences/com.apple.iPod.plist "conn:128:Last Connect"
+sudo defaults delete /Users/$USER/Library/Preferences/com.apple.iPod.plist Devices
+sudo defaults delete /Library/Preferences/com.apple.iPod.plist "conn:128:Last Connect"
+sudo defaults delete /Library/Preferences/com.apple.iPod.plist Devices
+sudo rm -rfv /var/db/lockdown/*
 # ----------------------------------------------------------
 
 
@@ -420,52 +387,135 @@ fi
 
 
 # ----------------------------------------------------------
-# -------------Clear iOS app copies from iTunes-------------
+# ------------------Clear diagnostic logs-------------------
 # ----------------------------------------------------------
-echo '--- Clear iOS app copies from iTunes'
-rm -rfv ~/Music/iTunes/iTunes\ Media/Mobile\ Applications/* &>/dev/null
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ------------------Clear iOS photo cache-------------------
-# ----------------------------------------------------------
-echo '--- Clear iOS photo cache'
-rm -rf ~/Pictures/iPhoto\ Library/iPod\ Photo\ Cache/*
+echo '--- Clear diagnostic logs'
+# Clear directory contents: "/private/var/db/diagnostics"
+glob_pattern="/private/var/db/diagnostics/*"
+sudo rm -rfv $glob_pattern
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# -----------------Clear iOS Device Backups-----------------
+# ---------------Clear diagnostic log details---------------
 # ----------------------------------------------------------
-echo '--- Clear iOS Device Backups'
-rm -rfv ~/Library/Application\ Support/MobileSync/Backup/* &>/dev/null
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# -------------------Clear iOS simulators-------------------
-# ----------------------------------------------------------
-echo '--- Clear iOS simulators'
-if type "xcrun" &>/dev/null; then
-    osascript -e 'tell application "com.apple.CoreSimulator.CoreSimulatorService" to quit'
-    osascript -e 'tell application "iOS Simulator" to quit'
-    osascript -e 'tell application "Simulator" to quit'
-    xcrun simctl shutdown all
-    xcrun simctl erase all
-fi
+echo '--- Clear diagnostic log details'
+# Clear directory contents: "/private/var/db/uuidtext"
+glob_pattern="/private/var/db/uuidtext/*"
+sudo rm -rfv $glob_pattern
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# -----------Clear list of connected iOS devices------------
+# --------------Clear Apple System Logs (ASL)---------------
 # ----------------------------------------------------------
-echo '--- Clear list of connected iOS devices'
-sudo defaults delete /Users/$USER/Library/Preferences/com.apple.iPod.plist "conn:128:Last Connect"
-sudo defaults delete /Users/$USER/Library/Preferences/com.apple.iPod.plist Devices
-sudo defaults delete /Library/Preferences/com.apple.iPod.plist "conn:128:Last Connect"
-sudo defaults delete /Library/Preferences/com.apple.iPod.plist Devices
-sudo rm -rfv /var/db/lockdown/*
+echo '--- Clear Apple System Logs (ASL)'
+# Clear directory contents: "/private/var/log/asl"
+glob_pattern="/private/var/log/asl/*"
+sudo rm -rfv $glob_pattern
+# Delete files matching pattern: "/private/var/log/asl.log"
+glob_pattern="/private/var/log/asl.log"
+sudo rm -fv $glob_pattern
+# Delete files matching pattern: "/private/var/log/asl.db"
+glob_pattern="/private/var/log/asl.db"
+sudo rm -fv $glob_pattern
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# -----------------Clear installation logs------------------
+# ----------------------------------------------------------
+echo '--- Clear installation logs'
+# Delete files matching pattern: "/private/var/log/install.log"
+glob_pattern="/private/var/log/install.log"
+sudo rm -fv $glob_pattern
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ------------------Clear all system logs-------------------
+# ----------------------------------------------------------
+echo '--- Clear all system logs'
+# Clear directory contents: "/private/var/log"
+glob_pattern="/private/var/log/*"
+sudo rm -rfv $glob_pattern
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# --------------Clear system application logs---------------
+# ----------------------------------------------------------
+echo '--- Clear system application logs'
+# Clear directory contents: "/Library/Logs"
+glob_pattern="/Library/Logs/*"
+sudo rm -rfv $glob_pattern
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ---------------Clear user application logs----------------
+# ----------------------------------------------------------
+echo '--- Clear user application logs'
+# Clear directory contents: "$HOME/Library/Logs"
+glob_pattern="$HOME/Library/Logs/*"
+ rm -rfv $glob_pattern
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# -------------------Clear Mail app logs--------------------
+# ----------------------------------------------------------
+echo '--- Clear Mail app logs'
+# Clear directory contents: "$HOME/Library/Containers/com.apple.mail/Data/Library/Logs/Mail"
+glob_pattern="$HOME/Library/Containers/com.apple.mail/Data/Library/Logs/Mail/*"
+ rm -rfv $glob_pattern
+# ----------------------------------------------------------
+
+
+# Clear user activity audit logs (login, logout, authentication, etc.)
+echo '--- Clear user activity audit logs (login, logout, authentication, etc.)'
+# Clear directory contents: "/private/var/audit"
+glob_pattern="/private/var/audit/*"
+sudo rm -rfv $glob_pattern
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# --------------Clear system maintenance logs---------------
+# ----------------------------------------------------------
+echo '--- Clear system maintenance logs'
+# Delete files matching pattern: "/private/var/log/daily.out"
+glob_pattern="/private/var/log/daily.out"
+sudo rm -fv $glob_pattern
+# Delete files matching pattern: "/private/var/log/weekly.out"
+glob_pattern="/private/var/log/weekly.out"
+sudo rm -fv $glob_pattern
+# Delete files matching pattern: "/private/var/log/monthly.out"
+glob_pattern="/private/var/log/monthly.out"
+sudo rm -fv $glob_pattern
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ---------------Clear app installation logs----------------
+# ----------------------------------------------------------
+echo '--- Clear app installation logs'
+# Clear directory contents: "/private/var/db/receipts"
+glob_pattern="/private/var/db/receipts/*"
+sudo rm -rfv $glob_pattern
+# Delete files matching pattern: "/Library/Receipts/InstallHistory.plist"
+glob_pattern="/Library/Receipts/InstallHistory.plist"
+ rm -fv $glob_pattern
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ---------------Clear CUPS printer job cache---------------
+# ----------------------------------------------------------
+echo '--- Clear CUPS printer job cache'
+sudo rm -rfv /var/spool/cups/c0*
+sudo rm -rfv /var/spool/cups/tmp/*
+sudo rm -rfv /var/spool/cups/cache/job.cache*
 # ----------------------------------------------------------
 
 
@@ -497,22 +547,102 @@ fi
 
 
 # ----------------------------------------------------------
-# ------------------Clear diagnostic logs-------------------
+# ----------------Empty trash on all volumes----------------
 # ----------------------------------------------------------
-echo '--- Clear diagnostic logs'
-# Clear directory contents: "/private/var/db/diagnostics"
-glob_pattern="/private/var/db/diagnostics/*"
-sudo rm -rfv $glob_pattern
+echo '--- Empty trash on all volumes'
+# on all mounted volumes
+sudo rm -rfv /Volumes/*/.Trashes/* &>/dev/null
+# on main HDD
+sudo rm -rfv ~/.Trash/* &>/dev/null
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# ---------------Clear diagnostic log details---------------
+# --------------------Clear system cache--------------------
 # ----------------------------------------------------------
-echo '--- Clear diagnostic log details'
-# Clear directory contents: "/private/var/db/uuidtext"
-glob_pattern="/private/var/db/uuidtext/*"
-sudo rm -rfv $glob_pattern
+echo '--- Clear system cache'
+sudo rm -rfv /Library/Caches/* &>/dev/null
+sudo rm -rfv /System/Library/Caches/* &>/dev/null
+sudo rm -rfv ~/Library/Caches/* &>/dev/null
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ---------Clear Xcode's derived data and archives----------
+# ----------------------------------------------------------
+echo '--- Clear Xcode'\''s derived data and archives'
+rm -rfv ~/Library/Developer/Xcode/DerivedData/* &>/dev/null
+rm -rfv ~/Library/Developer/Xcode/Archives/* &>/dev/null
+rm -rfv ~/Library/Developer/Xcode/iOS Device Logs/* &>/dev/null
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# --------------------Remove Guest User---------------------
+# ----------------------------------------------------------
+echo '--- Remove Guest User'
+if ! command -v 'sysadminctl' &> /dev/null; then
+    echo 'Skipping because "sysadminctl" is not found.'
+else
+    sudo sysadminctl -deleteUser Guest
+fi
+if ! command -v 'fdesetup' &> /dev/null; then
+    echo 'Skipping because "fdesetup" is not found.'
+else
+    sudo fdesetup remove -user Guest
+fi
+if ! command -v 'dscl' &> /dev/null; then
+    echo 'Skipping because "dscl" is not found.'
+else
+    sudo dscl . delete /Users/Guest
+fi
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ----------Remove Google Software Update service-----------
+# ----------------------------------------------------------
+echo '--- Remove Google Software Update service'
+googleUpdateFile=~/Library/Google/GoogleSoftwareUpdate/GoogleSoftwareUpdate.bundle/Contents/Resources/ksinstall
+if [ -f "$googleUpdateFile" ]; then
+    $googleUpdateFile --nuke
+    echo 'Uninstalled Google update'
+else
+    echo 'Google update file does not exist'
+fi
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ---------------Disable remote Apple events----------------
+# ----------------------------------------------------------
+echo '--- Disable remote Apple events'
+sudo systemsetup -setremoteappleevents off
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ---------------Disable AirDrop file sharing---------------
+# ----------------------------------------------------------
+echo '--- Disable AirDrop file sharing'
+defaults write com.apple.NetworkBrowser DisableAirDrop -bool true
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# ------Disable date and time in screenshot filenames-------
+# ----------------------------------------------------------
+echo '--- Disable date and time in screenshot filenames'
+defaults write 'com.apple.screencapture' 'include-date' -bool false
+killall SystemUIServer
+# ----------------------------------------------------------
+
+
+# ----------------------------------------------------------
+# -------------Disable captive portal detection-------------
+# ----------------------------------------------------------
+echo '--- Disable captive portal detection'
+sudo defaults write '/Library/Preferences/SystemConfiguration/com.apple.captive.control.plist' Active -bool false
 # ----------------------------------------------------------
 
 
@@ -538,85 +668,75 @@ rm -r ~/Library/Containers/com.apple.RemoteDesktop
 
 
 # ----------------------------------------------------------
-# ---------------Enable application firewall----------------
+# --------------------Disable "Ask Siri"--------------------
 # ----------------------------------------------------------
-echo '--- Enable application firewall'
-/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
-sudo defaults write /Library/Preferences/com.apple.alf globalstate -bool true
-defaults write com.apple.security.firewall EnableFirewall -bool true
+echo '--- Disable "Ask Siri"'
+defaults write com.apple.assistant.support 'Assistant Enabled' -bool false
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# -----------------Enable firewall logging------------------
+# ---------------Disable Siri voice feedback----------------
 # ----------------------------------------------------------
-echo '--- Enable firewall logging'
-/usr/libexec/ApplicationFirewall/socketfilterfw --setloggingmode on
-sudo defaults write /Library/Preferences/com.apple.alf loggingenabled -bool true
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# -------------------Enable stealth mode--------------------
-# ----------------------------------------------------------
-echo '--- Enable stealth mode'
-/usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
-sudo defaults write /Library/Preferences/com.apple.alf stealthenabled -bool true
-defaults write com.apple.security.firewall EnableStealthMode -bool true
+echo '--- Disable Siri voice feedback'
+defaults write com.apple.assistant.backedup 'Use device speaker for TTS' -int 3
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# -------Disable incoming SSH and SFTP remote logins--------
+# ----------------Remove Siri from menu bar-----------------
 # ----------------------------------------------------------
-echo '--- Disable incoming SSH and SFTP remote logins'
-echo 'yes' | sudo systemsetup -setremotelogin off
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ------------Disable the insecure TFTP service-------------
-# ----------------------------------------------------------
-echo '--- Disable the insecure TFTP service'
-sudo launchctl disable 'system/com.apple.tftpd'
+echo '--- Remove Siri from menu bar'
+defaults write com.apple.systemuiserver 'NSStatusItem Visible Siri' 0
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# ----------Disable Bonjour multicast advertising-----------
+# ---------------Remove Siri from status menu---------------
 # ----------------------------------------------------------
-echo '--- Disable Bonjour multicast advertising'
-sudo defaults write /Library/Preferences/com.apple.mDNSResponder.plist NoMulticastAdvertisements -bool true
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# -------------Disable insecure telnet protocol-------------
-# ----------------------------------------------------------
-echo '--- Disable insecure telnet protocol'
-sudo launchctl disable system/com.apple.telnetd
+echo '--- Remove Siri from status menu'
+defaults write com.apple.Siri 'StatusMenuVisible' -bool false
+defaults write com.apple.Siri 'UserHasDeclinedEnable' -bool true
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# ----Disable local printer sharing with other computers----
+# ---------------Disable guest account login----------------
 # ----------------------------------------------------------
-echo '--- Disable local printer sharing with other computers'
-cupsctl --no-share-printers
+echo '--- Disable guest account login'
+sudo defaults write '/Library/Preferences/com.apple.loginwindow' 'GuestEnabled' -bool NO
+if ! command -v 'sysadminctl' &> /dev/null; then
+    echo 'Skipping because "sysadminctl" is not found.'
+else
+    sudo sysadminctl -guestAccount off
+fi
 # ----------------------------------------------------------
 
 
-# Disable printing from external addresses, including the internet
-echo '--- Disable printing from external addresses, including the internet'
-cupsctl --no-remote-any
+# ----------------------------------------------------------
+# -----------Disable guest file sharing over SMB------------
+# ----------------------------------------------------------
+echo '--- Disable guest file sharing over SMB'
+sudo defaults write '/Library/Preferences/SystemConfiguration/com.apple.smb.server' 'AllowGuestAccess' -bool NO
+if ! command -v 'sysadminctl' &> /dev/null; then
+    echo 'Skipping because "sysadminctl" is not found.'
+else
+    sudo sysadminctl -smbGuestAccess off
+fi
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# ----------Disable remote printer administration-----------
+# -----------Disable guest file sharing over AFP------------
 # ----------------------------------------------------------
-echo '--- Disable remote printer administration'
-cupsctl --no-remote-admin
+echo '--- Disable guest file sharing over AFP'
+sudo defaults write '/Library/Preferences/com.apple.AppleFileServer' 'guestAccess' -bool NO
+if ! command -v 'sysadminctl' &> /dev/null; then
+    echo 'Skipping because "sysadminctl" is not found.'
+else
+    sudo sysadminctl -afpGuestAccess off
+fi
+sudo killall -HUP AppleFileServer
 # ----------------------------------------------------------
 
 
@@ -899,22 +1019,18 @@ rm -rfv ~/Library/Application\ Support/Firefox/Profiles/*/storage/default/http*
 
 
 # ----------------------------------------------------------
-# ------------Clear privacy.sexy script history-------------
+# Disable automatic downloads for Parallels Desktop updates-
 # ----------------------------------------------------------
-echo '--- Clear privacy.sexy script history'
-# Clear directory contents: "$HOME/Library/Application Support/privacy.sexy/runs"
-glob_pattern="$HOME/Library/Application Support/privacy.sexy/runs/*"
- rm -rfv $glob_pattern
+echo '--- Disable automatic downloads for Parallels Desktop updates'
+defaults write 'com.parallels.Parallels Desktop' 'Application preferences.Download updates automatically' -bool no
 # ----------------------------------------------------------
 
 
 # ----------------------------------------------------------
-# -------------Clear privacy.sexy activity logs-------------
+# --Disable automatic checks for Parallels Desktop updates--
 # ----------------------------------------------------------
-echo '--- Clear privacy.sexy activity logs'
-# Clear directory contents: "$HOME/Library/Logs/privacy.sexy"
-glob_pattern="$HOME/Library/Logs/privacy.sexy/*"
- rm -rfv $glob_pattern
+echo '--- Disable automatic checks for Parallels Desktop updates'
+defaults write 'com.parallels.Parallels Desktop' 'Application preferences.Check for updates' -int 0
 # ----------------------------------------------------------
 
 
@@ -928,38 +1044,6 @@ defaults write 'com.parallels.Parallels Desktop' 'WelcomeScreenPromo.PromoOff' -
 
 
 # ----------------------------------------------------------
-# --------------------Disable "Ask Siri"--------------------
-# ----------------------------------------------------------
-echo '--- Disable "Ask Siri"'
-defaults write com.apple.assistant.support 'Assistant Enabled' -bool false
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ---------------Disable Siri voice feedback----------------
-# ----------------------------------------------------------
-echo '--- Disable Siri voice feedback'
-defaults write com.apple.assistant.backedup 'Use device speaker for TTS' -int 3
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# -------Disable Siri services (Siri and assistantd)--------
-# ----------------------------------------------------------
-echo '--- Disable Siri services (Siri and assistantd)'
-launchctl disable "user/$UID/com.apple.assistantd"
-launchctl disable "gui/$UID/com.apple.assistantd"
-sudo launchctl disable 'system/com.apple.assistantd'
-launchctl disable "user/$UID/com.apple.Siri.agent"
-launchctl disable "gui/$UID/com.apple.Siri.agent"
-sudo launchctl disable 'system/com.apple.Siri.agent'
-if [ $(/usr/bin/csrutil status | awk '/status/ {print $5}' | sed 's/\.$//') = "enabled" ]; then
-    >&2 echo 'This script requires SIP to be disabled. Read more: https://developer.apple.com/documentation/security/disabling_and_enabling_system_integrity_protection'
-fi
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
 # -------Disable "Do you want to enable Siri?" pop-up-------
 # ----------------------------------------------------------
 echo '--- Disable "Do you want to enable Siri?" pop-up'
@@ -968,35 +1052,22 @@ defaults write com.apple.SetupAssistant 'DidSeeSiriSetup' -bool True
 
 
 # ----------------------------------------------------------
-# ----------------Remove Siri from menu bar-----------------
-# ----------------------------------------------------------
-echo '--- Remove Siri from menu bar'
-defaults write com.apple.systemuiserver 'NSStatusItem Visible Siri' 0
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ---------------Remove Siri from status menu---------------
-# ----------------------------------------------------------
-echo '--- Remove Siri from status menu'
-defaults write com.apple.Siri 'StatusMenuVisible' -bool false
-defaults write com.apple.Siri 'UserHasDeclinedEnable' -bool true
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# ------Disable participation in Siri data collection-------
-# ----------------------------------------------------------
-echo '--- Disable participation in Siri data collection'
-defaults write com.apple.assistant.support 'Siri Data Sharing Opt-In Status' -int 2
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
 # ------Disable display of recent applications on Dock------
 # ----------------------------------------------------------
 echo '--- Disable display of recent applications on Dock'
 defaults write com.apple.dock show-recents -bool false
+# ----------------------------------------------------------
+
+
+# Enable password requirement for waking from sleep or screen saver
+echo '--- Enable password requirement for waking from sleep or screen saver'
+sudo defaults write /Library/Preferences/com.apple.screensaver askForPassword -bool true
+# ----------------------------------------------------------
+
+
+# Enable session lock five seconds after screen saver initiation
+echo '--- Enable session lock five seconds after screen saver initiation'
+sudo defaults write /Library/Preferences/com.apple.screensaver 'askForPasswordDelay' -int 5
 # ----------------------------------------------------------
 
 
